@@ -1,11 +1,13 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Zenject;
 public class GameLoopManager : MonoBehaviour
 {
     [SerializeField] private float _gameDuration = 30f;
 
     [Inject] private IScoreRepository _scoreRepository;
+    [InjectOptional] private ZenjectSceneLoader _sceneLoader;
 
     public int CurrentScore{get; private set;}
     public float RemainingTime{get; private set;}
@@ -15,6 +17,27 @@ public class GameLoopManager : MonoBehaviour
     public event Action<int> OnScoreChanged;
     public event Action<float> OnTimeChanged;
     public event Action OnGameOver;
+
+    private void Awake()
+    {
+        EnsureUISceneLoaded();
+    }
+
+    private void EnsureUISceneLoaded()
+    {
+        const string uiSceneName = "GameplayUIScene";
+        if (!SceneManager.GetSceneByName(uiSceneName).isLoaded)
+        {
+            if (_sceneLoader != null)
+            {
+                _sceneLoader.LoadScene(uiSceneName, LoadSceneMode.Additive);
+            }
+            else
+            {
+                SceneManager.LoadSceneAsync(uiSceneName, LoadSceneMode.Additive);
+            }
+        }
+    }
 
     private void Start()
     {
